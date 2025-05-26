@@ -5,10 +5,12 @@ import '../../blocs/service/service_event.dart';
 import '../../blocs/service/service_state.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
+import '../../blocs/auth/auth_state.dart';
 import '../../widgets/service_provider_card.dart';
 import '../../utils/colors.dart';
 import 'service_provider_detail_screen.dart';
 import 'customer_profile_screen.dart';
+import '../auth/login_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   @override
@@ -26,34 +28,50 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final pages = [
       _buildHomeContent(),
       CustomerProfileScreen(),
     ];
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: AppColors.lightGray,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: pages[_currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          selectedItemColor: AppColors.primaryBlue,
+          unselectedItemColor: AppColors.lightGray,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -99,7 +117,31 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     ),
                     IconButton(
                       onPressed: () {
-                        context.read<AuthBloc>().add(LogoutRequested());
+                        // Show confirmation dialog
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Logout'),
+                              content: Text('Are you sure you want to logout?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    context.read<AuthBloc>().add(LogoutRequested());
+                                  },
+                                  child: Text('Logout'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       },
                       icon: Icon(Icons.logout, color: Colors.white),
                     ),
