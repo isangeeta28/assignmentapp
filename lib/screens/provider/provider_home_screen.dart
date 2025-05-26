@@ -5,9 +5,11 @@ import '../../blocs/order/order_event.dart';
 import '../../blocs/order/order_state.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
+import '../../blocs/auth/auth_state.dart';
 import '../../utils/colors.dart';
 import 'provider_detail_form_screen.dart';
 import 'order_management_screen.dart';
+import '../auth/login_screen.dart';
 
 class ProviderHomeScreen extends StatefulWidget {
   @override
@@ -31,33 +33,43 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
       ProviderDetailFormScreen(),
     ];
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: AppColors.lightGray,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: pages[_currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          selectedItemColor: AppColors.primaryBlue,
+          unselectedItemColor: AppColors.lightGray,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.assignment),
+              label: 'Orders',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -104,7 +116,31 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
                       ),
                       IconButton(
                         onPressed: () {
-                          context.read<AuthBloc>().add(LogoutRequested());
+                          // Show confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Logout'),
+                                content: Text('Are you sure you want to logout?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      context.read<AuthBloc>().add(LogoutRequested());
+                                    },
+                                    child: Text('Logout'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
                         },
                         icon: Icon(Icons.logout, color: Colors.white),
                       ),
@@ -400,7 +436,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                '\${order.amount}',
+                                '\$${order.amount}',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: AppColors.primaryBlue,

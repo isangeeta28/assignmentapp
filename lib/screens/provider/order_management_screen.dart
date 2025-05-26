@@ -91,6 +91,15 @@ class OrderManagementScreen extends StatelessWidget {
   }
 
   Widget _buildOrderCard(BuildContext context, Order order) {
+    // Safe way to get order ID substring
+    String getOrderDisplayId(String orderId) {
+      if (orderId.length >= 8) {
+        return orderId.substring(0, 8);
+      } else {
+        return orderId; // Return full ID if it's shorter than 8 characters
+      }
+    }
+
     return Card(
       margin: EdgeInsets.only(bottom: 16),
       elevation: 3,
@@ -104,7 +113,7 @@ class OrderManagementScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Order #${order.id.substring(0, 8)}',
+                  'Order #${getOrderDisplayId(order.id)}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -143,7 +152,7 @@ class OrderManagementScreen extends StatelessWidget {
                 Icon(Icons.attach_money, size: 16, color: AppColors.lightGray),
                 SizedBox(width: 4),
                 Text(
-                  '\${order.amount}',
+                  '\$${order.amount.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -295,6 +304,6 @@ class OrderManagementScreen extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 }
